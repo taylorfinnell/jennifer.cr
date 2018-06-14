@@ -20,6 +20,36 @@ module Jennifer
         overlap: "&&"
       }
 
+      def self.upsert(obj : Model::Base, with_primary_field = true, conflict : Array(String)? = nil, updates : Array(Array(String))? = nil)
+        opts = obj.arguments_to_insert
+        String.build do |s|
+          s << "INSERT INTO " << obj.class.table_name
+          unless opts[:fields].empty?
+            s << "("
+            opts[:fields].join(", ", s)
+            s << ") VALUES (" << escape_string(opts[:fields].size) << ") "
+          end
+
+          if updates.nil?
+            s << "ON CONFLICT DO NOTHING"
+          else
+            changes = updates.reduce("") do |memo, update|
+              "#{update[0]} = #{update[1]}"
+            end
+
+            if conflict.nil?
+              s << "ON CONFLICT DO UPDATE SET #{changes}"
+            else
+              s << "ON CONFLICT (#{conflict.join(",")}) DO UPDATE SET #{changes}"
+            end
+          end
+
+          if with_primary_field
+            s << " RETURNING " << obj.class.primary_field_name
+          end
+        end
+      end
+
       def self.insert(obj : Model::Base, with_primary_field = true)
         opts = obj.arguments_to_insert
         String.build do |s|

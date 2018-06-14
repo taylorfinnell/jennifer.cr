@@ -199,6 +199,26 @@ module Jennifer
         raise BaseException.new("Unknown table lock type '#{type}'.")
       end
 
+      def upsert(obj : Model::Base, conflict : Array(String)? = nil, updates : Array(Array(String))? = nil)
+        opts = obj.arguments_to_insert
+        query_opts = parse_query(sql_generator.upsert(obj, obj.class.primary_auto_incrementable?, conflict, updates), opts[:args])
+
+        id = -1i64
+        affected = 0i64
+        if obj.class.primary_auto_incrementable?
+          query(*query_opts) do |x|
+            x.each do
+              id = x.read(Int32).to_i64
+            end
+          end
+          affected += 1 if id > 0
+        end
+
+        obj.id = id.to_i.as(Primary32)
+
+        ExecResult.new(id, affected)
+      end
+
       def insert(obj : Model::Base)
         opts = obj.arguments_to_insert
         query_opts = parse_query(sql_generator.insert(obj, obj.class.primary_auto_incrementable?), opts[:args])
