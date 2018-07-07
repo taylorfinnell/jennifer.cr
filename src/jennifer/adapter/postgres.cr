@@ -214,7 +214,7 @@ module Jennifer
           affected += 1 if id > 0
         end
 
-        obj.id = id.to_i.as(Primary32)
+        obj.id = id.to_i.as(Int32)
 
         ExecResult.new(id, affected)
       end
