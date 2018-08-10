@@ -3,7 +3,7 @@ require "../base_sql_generator"
 module Jennifer
   module Postgres
     class SQLGenerator < Adapter::BaseSQLGenerator
-      def self.upsert(obj : Model::Base, with_primary_field = true, conflict : Array(String)? = nil, updates : Array(Array(String))? = nil)
+      def self.upsert(obj : Model::Base, with_primary_field = true, conflict : Array(String)? = nil, updates : Array(Array(String | Int32))? = nil)
         opts = obj.arguments_to_insert
         String.build do |s|
           s << "INSERT INTO " << obj.class.table_name
@@ -16,9 +16,9 @@ module Jennifer
           if updates.nil?
             s << "ON CONFLICT DO NOTHING"
           else
-            changes = updates.reduce("") do |memo, update|
+            changes = updates.map do |update|
               "#{update[0]} = #{update[1]}"
-            end
+            end.join(", ")
 
             if conflict.nil?
               s << "ON CONFLICT DO UPDATE SET #{changes}"
