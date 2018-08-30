@@ -10,17 +10,40 @@ module Jennifer
         if under_transaction?
           yield @locks[fiber_id].connection
         else
-          with_manual_connection { |conn| yield conn }
+          conn = Jennifer.connection.not_nil!.checkout
+          res = yield conn
+          conn.release
+          res
         end
       end
 
       # Yields new checkout connection.
       def with_manual_connection(&block)
-        conn = @db.checkout
-        begin
-          yield conn
-        ensure
-          conn.release
+        conn = Jennifer.connection.not_nil!.checkout
+        res = yield conn
+        conn.release
+        res
+      end
+
+      def with_transactionable(&block)
+        if under_transaction?
+          yield @locks[fiber_id].transaction
+        else
+          conn = Jennifer.connection.checkout
+          begin
+            res = yield conn
+          ensure
+            conn.release
+          end
+          res ? res : false
+        end
+      end
+
+      def lock_connection(transaction : DB::Transaction)
+        if @locks[fiber_id]?
+          @locks[fiber_id].transaction = transaction
+        else
+          @locks[fiber_id] = TransactionObserver.new(transaction)
         end
       end
 
@@ -70,8 +93,8 @@ module Jennifer
       # Starts manual transaction for current fiber. Designed for usage in test callback.
       def begin_transaction
         raise ::Jennifer::BaseException.new("Couldn't manually begin non top level transaction") if current_transaction
-        Config.logger.debug("START")
-        lock_connection(@db.checkout.begin_transaction)
+        Config.logger.debug("TRANSACTION START")
+        lock_connection(Jennifer.connection.checkout.begin_transaction)
       end
 
       # Closes manual transaction for current fiber. Designed for usage in test callback.

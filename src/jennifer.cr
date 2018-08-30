@@ -13,6 +13,7 @@ require "./jennifer/config"
 
 require "./jennifer/query_builder"
 
+require "./jennifer/connection"
 require "./jennifer/adapter/base"
 
 require "./jennifer/model/base"
@@ -23,6 +24,18 @@ require "./jennifer/migration/*"
 
 module Jennifer
   VERSION = "0.8.4"
+
+  @@connectiom : Connection?
+
+  def self.connect
+    @@connection = Connection.new
+    connection.not_nil!.connect
+    connection
+  end
+
+  def self.connection
+    @@connection.not_nil!
+  end
 
   {% if Jennifer.constant("AFTER_LOAD_SCRIPT") == nil %}
     # :nodoc:
