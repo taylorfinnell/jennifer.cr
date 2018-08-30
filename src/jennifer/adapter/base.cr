@@ -24,12 +24,6 @@ module Jennifer
 
       extend AbstractClassMethods
 
-      getter db : DB::Database
-
-      def initialize
-        @db = DB.open(self.class.connection_string(:db))
-      end
-
       def self.build
         new
       end
