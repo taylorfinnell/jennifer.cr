@@ -13,7 +13,9 @@ module Jennifer
     end
 
     def connect
-      @conn = DB.connect(Adapter::Base.connection_string(:db))
+      str = Adapter::Base.connection_string(:db)
+      puts "DB STRINGG IS: #{str}"
+      @conn = DB.connect(str)
       @connected = true
       @conn.not_nil!
     end
