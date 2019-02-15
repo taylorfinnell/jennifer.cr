@@ -24,18 +24,6 @@ require "./jennifer/migration/*"
 module Jennifer
   VERSION = "0.7.0"
 
-  @@connectiom : Connection?
-
-  def self.connect
-    @@connection = Connection.new
-    connection.not_nil!.connect
-    connection
-  end
-
-  def self.connection
-    @@connection.not_nil!
-  end
-
   {% if Jennifer.constant("AFTER_LOAD_SCRIPT") == nil %}
     # :nodoc:
     AFTER_LOAD_SCRIPT = [] of String

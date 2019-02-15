@@ -10,17 +10,17 @@ module Jennifer
         if under_transaction?
           yield @locks[fiber_id].connection
         else
-          conn = Jennifer.connection.not_nil!.checkout
+          conn = Jennifer::Connection.connect
           res = yield conn
-          conn.release
+          conn.close
           res
         end
       end
 
       def with_manual_connection(&block)
-        conn = Jennifer.connection.not_nil!.checkout
+        conn = Jennifer::Connection.connect
         res = yield conn
-        conn.release
+        conn.close
         res
       end
 
@@ -28,11 +28,11 @@ module Jennifer
         if under_transaction?
           yield @locks[fiber_id].transaction
         else
-          conn = Jennifer.connection.checkout
+          conn = Jennifer::Connection.connect
           begin
             yield conn
           ensure
-            conn.release
+            conn.close
           end
           res ? res : false
         end
@@ -40,11 +40,11 @@ module Jennifer
 
       # Yields new checkout connection.
       def with_manual_connection(&block)
-        conn = @db.checkout
+        conn = Jennifer::Connection.connect
         begin
           yield conn
         ensure
-          conn.release
+          conn.close
         end
       end
 
@@ -95,7 +95,7 @@ module Jennifer
       def begin_transaction
         raise ::Jennifer::BaseException.new("Couldn't manually begin non top level transaction") if current_transaction
         Config.logger.debug("TRANSACTION START")
-        lock_connection(Jennifer.connection.checkout.begin_transaction)
+        lock_connection(Jennifer::Connection.connect.begin_transaction)
       end
 
       # Closes manual transaction for current fiber. Designed for usage in test callback.
@@ -105,7 +105,7 @@ module Jennifer
         t = t.not_nil!
         t.rollback
         Config.logger.debug("TRANSACTION ROLLBACK")
-        t.connection.release
+        t.connection.close
         lock_connection(nil)
       end
 
@@ -132,11 +132,11 @@ module Jennifer
         if under_transaction?
           yield @locks[fiber_id].transaction
         else
-          conn = @db.checkout
+          conn = Jennifer::Connection.connect
           begin
             res = yield conn
           ensure
-            conn.release
+            conn.close
           end
           res || false
         end

@@ -1,22 +1,21 @@
 module Jennifer
   class Connection
-    @db : DB::Database?
+    @conn : DB::Connection?
 
     getter connected
+
+    def self.connect
+      new.connect
+    end
 
     def initialize
       @connected = false
     end
 
-    def checkout
-      raise "you must connect first" unless @connected
-      @db.not_nil!.checkout
-    end
-
     def connect
-      @db = DB.open(Adapter::Base.connection_string(:db))
+      @conn = DB.connect(Adapter::Base.connection_string(:db))
       @connected = true
-      @db
+      @conn.not_nil!
     end
   end
 end
