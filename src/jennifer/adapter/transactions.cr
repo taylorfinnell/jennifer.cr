@@ -12,7 +12,7 @@ module Jennifer
         else
           conn = Jennifer::Connection.connect
           res = yield conn
-          # conn.close
+          conn.close
           res
         end
       end
@@ -20,7 +20,7 @@ module Jennifer
       def with_manual_connection(&block)
         conn = Jennifer::Connection.connect
         res = yield conn
-        # conn.close
+        conn.close
         res
       end
 
@@ -32,7 +32,7 @@ module Jennifer
           begin
             yield conn
           ensure
-            # conn.close
+            conn.close
           end
           res ? res : false
         end
@@ -44,7 +44,7 @@ module Jennifer
         begin
           yield conn
         ensure
-          # conn.close
+          conn.close
         end
       end
 
@@ -105,7 +105,7 @@ module Jennifer
         t = t.not_nil!
         t.rollback
         Config.logger.debug("TRANSACTION ROLLBACK")
-        # t.connection.close
+        t.connection.close
         lock_connection(nil)
       end
 
@@ -136,7 +136,7 @@ module Jennifer
           begin
             res = yield conn
           ensure
-            # conn.close
+            conn.close
           end
           res || false
         end
