@@ -13,7 +13,7 @@ module Jennifer
     end
 
     def connect
-      @conn = DB.connect("#{Adapter::Base.connection_string(:db)}?prepared_statements=false")
+      @conn = DB.connect(Adapter::Base.connection_string(:db))
       @connected = true
       @conn.not_nil!
     end
