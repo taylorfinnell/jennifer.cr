@@ -3,7 +3,7 @@ require "../base_sql_generator"
 module Jennifer
   module Postgres
     class SQLGenerator < Adapter::BaseSQLGenerator
-      def self.upsert(obj : Model::Base, with_primary_field = true, conflict : Array(String)? = nil, updates : Array(Array(String | Int32))? = nil)
+      def self.upsert(obj : Model::Base, with_primary_field = true, conflict : Array(String)? = nil, updates : Array(Array(String | Int32 | Bool | Int64))? = nil)
         opts = obj.arguments_to_insert
         String.build do |s|
           s << "INSERT INTO " << obj.class.table_name
