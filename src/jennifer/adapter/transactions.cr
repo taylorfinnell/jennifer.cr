@@ -10,18 +10,18 @@ module Jennifer
         if under_transaction?
           yield @locks[fiber_id].connection
         else
-          conn = Jennifer.connection.not_nil!.checkout
-          res = yield conn
-          conn.release
-          res
+          with_manual_connection { |conn| yield conn }
         end
       end
 
       # Yields new checkout connection.
       def with_manual_connection(&block)
         conn = Jennifer.connection.not_nil!.checkout
-        res = yield conn
-        conn.release
+        begin
+          res = yield conn
+        ensure
+          conn.release
+        end
         res
       end
 
@@ -132,7 +132,7 @@ module Jennifer
         if under_transaction?
           yield @locks[fiber_id].transaction
         else
-          conn = @db.checkout
+          conn = Jennifer.connection.not_nil!.checkout
           begin
             res = yield conn
           ensure
